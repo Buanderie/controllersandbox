@@ -12,7 +12,7 @@ int main( int argc, char** argv )
 
     GNG<double> gng;
 
-    for( int k = 0; k < 100; ++k )
+    for( int k = 0; k < 100000; ++k )
     {
         std::vector<double> vi = gngrand_position<double>(2);
         gng.in( vi );

@@ -8,7 +8,7 @@ class GNGNode
 {
 public:
     GNGNode( size_t inputSize, const std::vector< ScalarType >& position )
-        :_position(position)
+        :_position(position), _error(100.0)
     {
 
     }
@@ -32,7 +32,8 @@ public:
     std::vector< GNGNode<ScalarType>* > neighbors()
     {
         std::vector< GNGNode<ScalarType>* > ret;
-
+        for( GNGNode<ScalarType>* nn : _neighbors )
+            ret.push_back( nn );
         return ret;
     }
 
@@ -41,10 +42,16 @@ public:
         return _position;
     }
 
+    ScalarType& error()
+    {
+        return _error;
+    }
+
 private:
 
 protected:
     std::vector< ScalarType > _position;
     std::set< GNGNode< ScalarType >* > _neighbors;
+    ScalarType _error;
 
 };

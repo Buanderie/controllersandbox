@@ -52,6 +52,18 @@ std::vector<ScalarType> vector_sub( const std::vector<ScalarType>& a,
 }
 
 template< typename ScalarType >
+std::vector<ScalarType> vector_add( const std::vector<ScalarType>& a,
+                                    const std::vector<ScalarType>& b )
+{
+    std::vector< ScalarType > ret( a.size() );
+    for( int i = 0; i < a.size(); ++i )
+    {
+        ret[i] = a[i] + b[i];
+    }
+    return ret;
+}
+
+template< typename ScalarType >
 std::vector<ScalarType> vector_scale( const std::vector<ScalarType>& a,
                                       ScalarType s )
 {
