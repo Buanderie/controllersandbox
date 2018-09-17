@@ -2,9 +2,9 @@
 
 using namespace std;
 
-#include "gngnode.h"
-#include "gng.h"
-#include "utils.h"
+#include <gngnode.h>
+#include <gng.h>
+#include <utils.h>
 
 int main( int argc, char** argv )
 {
