@@ -8,7 +8,7 @@ class GNGNode
 {
 public:
     GNGNode( size_t inputSize, const std::vector< ScalarType >& position )
-        :_position(position), _error(100.0)
+        :_position(position), _error(1.0)
     {
 
     }

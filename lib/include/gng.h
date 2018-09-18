@@ -17,9 +17,14 @@ public:
         :_inputSize(inputSize)
     {
         _inCount = 0;
-        _Eb = 0.1;
-        _En = 0.1;
-        _d = 0.001;
+        _Eb = 0.2;
+        _En = 0.006;
+
+        _A = 300;
+        _ageMax = 120;
+        _alpha = 0.5;
+        _beta = 0.995;
+
         init();
     }
 
@@ -126,6 +131,7 @@ public:
             _edges.erase( e );
             delete e;
         }
+        removeNonConnectedNodes();
 
         // (8) If the number of input signals generated so far is an integer multiple of a
         // parameter A, insert a new unit as follows:
@@ -140,17 +146,22 @@ public:
         // error variable of q.
         if( _inCount % _A == 0 )
         {
+            cerr << "_inCount=" << _inCount << " - INSERT !" << endl;
             insertNewNode();
+            //            sleep(1);
         }
 
         // (9) Decrease all error variables by multiplying them with a constant d.
         for( GNGNode<ScalarType>* n : _nodes )
         {
-            n->error() *= _d;
+            n->error() *= _beta;
         }
 
         // (10) If a stopping criterion (e.g., net size or some performance measure) is not
         // yet fulfilled go to step 1.
+
+        _inCount++;
+
     }
 
 private:
@@ -164,7 +175,25 @@ private:
     int _A;
     ScalarType _d;
 
+    ScalarType _beta;
+    ScalarType _alpha;
+
     int _inCount;
+
+    void removeNonConnectedNodes()
+    {
+        std::vector< GNGNode<ScalarType>* > toRemove;
+        for( GNGNode<ScalarType>* n : _nodes )
+        {
+            if( n->neighbors().size() <= 0 )
+                toRemove.push_back(n);
+        }
+        for( GNGNode<ScalarType>* n : toRemove )
+        {
+            _nodes.erase( n );
+            delete n;
+        }
+    }
 
     void insertNewNode()
     {
@@ -181,27 +210,27 @@ private:
         GNGNode<ScalarType>* maxErrorNode = nullptr;
         for( GNGNode<ScalarType>* n : _nodes )
         {
-            cerr << "n=" << n << " n_error=" << n->error() << endl;
+            //            cerr << "n=" << n << " n_error=" << n->error() << endl;
             if( n->error() > maxError )
             {
-                cerr << "maxError=" << maxError << " n_error=" << n->error() << endl;
+                //                cerr << "maxError=" << maxError << " n_error=" << n->error() << endl;
                 maxError = n->error();
                 maxErrorNode = n;
             }
         }
-        cerr << "maxErrorNode=" << maxErrorNode << endl;
+        //        cerr << "maxErrorNode=" << maxErrorNode << endl;
 
         //
         if( maxErrorNode->neighbors().size() > 0 )
         {
             ScalarType maxNeihborError = std::numeric_limits<ScalarType>::min();
             GNGNode<ScalarType>* maxNeighborErrorNode = nullptr;
-            cerr << "neighbors.size=" << maxErrorNode->neighbors().size() << endl;
+            //            cerr << "neighbors.size=" << maxErrorNode->neighbors().size() << endl;
             for( GNGNode<ScalarType>* nn : maxErrorNode->neighbors() )
             {
                 if( nn->error() >= maxNeihborError )
                 {
-                    cerr << "maxNeighborError=" << maxNeihborError << " nn_error=" << nn->error() << endl;
+                    //                    cerr << "maxNeighborError=" << maxNeihborError << " nn_error=" << nn->error() << endl;
                     maxNeihborError = nn->error();
                     maxNeighborErrorNode = nn;
                 }
@@ -212,8 +241,8 @@ private:
             std::vector<ScalarType> w_f = maxNeighborErrorNode->position();
             std::vector<ScalarType> w_r = vector_scale( vector_add( w_q, w_f ), (ScalarType)1 / (ScalarType)2 );
             GNGNode<ScalarType> * f = new GNGNode<ScalarType>( w_r.size(), w_r );
-            maxErrorNode->error() *= _d;
-            maxNeighborErrorNode->error() *= _d;
+            maxErrorNode->error() *= _alpha;
+            maxNeighborErrorNode->error() *= _alpha;
             f->error() = maxErrorNode->error();
             _nodes.insert( f );
             removeEdge( maxErrorNode, maxNeighborErrorNode );

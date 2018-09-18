@@ -6,19 +6,26 @@
 #include <math.h>
 
 template< typename ScalarType >
-ScalarType gngrand()
+ScalarType interpolation(ScalarType x1, ScalarType x2, ScalarType y1, ScalarType y2, ScalarType xInt)
 {
-    return (ScalarType)rand() / (ScalarType)RAND_MAX;
+    return y1 + (y2 - y1) / (x2 - x1)*(xInt - x1);
 }
 
 template< typename ScalarType >
-std::vector<ScalarType> gngrand_position( size_t size )
+ScalarType gngrand( ScalarType minVal = 0.0, ScalarType maxVal=1.0 )
+{
+    ScalarType rv = (ScalarType)rand() / (ScalarType)RAND_MAX;
+    return interpolation( (ScalarType)0.0, (ScalarType)1.0, minVal, maxVal, rv );
+}
+
+template< typename ScalarType >
+std::vector<ScalarType> gngrand_position( size_t size, ScalarType minVal=0.0, ScalarType maxVal=1.0 )
 {
     std::vector< ScalarType > ret;
     ret.resize(size);
     for( int i = 0; i < ret.size(); ++i )
     {
-        ret[ i ] = gngrand<ScalarType>();
+        ret[ i ] = gngrand<ScalarType>(minVal, maxVal);
     }
     return ret;
 }
@@ -74,3 +81,4 @@ std::vector<ScalarType> vector_scale( const std::vector<ScalarType>& a,
     }
     return ret;
 }
+
