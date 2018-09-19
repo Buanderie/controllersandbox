@@ -18,8 +18,10 @@ else()
 endif()
 ##
 
+find_package( OpenCV REQUIRED )
+
 include_directories( ${CTRLSANDBOX_SOURCE_DIR}/lib/include )
 # find_package( OpenCV REQUIRED )
 add_executable( ctrlsb main.cc )
-# target_link_libraries( test ${OpenCV_LIBS} )
+target_link_libraries( ctrlsb ${OpenCV_LIBS} )
 

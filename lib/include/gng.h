@@ -18,10 +18,10 @@ public:
     {
         _inCount = 0;
         _Eb = 0.2;
-        _En = 0.006;
+        _En = 0.06;
 
         _A = 300;
-        _ageMax = 120;
+        _ageMax = 200;
         _alpha = 0.5;
         _beta = 0.995;
 
@@ -33,6 +33,32 @@ public:
 
     }
 
+    ScalarType find( std::vector<ScalarType> input, GNGNode<ScalarType>*& ret )
+    {
+        GNGNode<ScalarType> * s1 = nullptr;
+        ScalarType d1 = std::numeric_limits<ScalarType>::max();
+        for( auto s : _nodes )
+        {
+            ScalarType d = vector_distance( s->position(), input );
+            if( d < d1 )
+            {
+                d1 = d;
+                s1 = s;
+            }
+        }
+        ret = s1;
+        return d1;
+    }
+
+    std::set< GNGNode< ScalarType >* >& nodes()
+    {
+        return _nodes;
+    }
+
+    std::set< GNGEdge<ScalarType>* >& edges()
+    {
+        return _edges;
+    }
 
     void init()
     {
@@ -46,7 +72,7 @@ public:
 
     void in( const std::vector<ScalarType> epsilon )
     {
-        cerr << "cur_nodes=" << _nodes.size() << endl;
+//        cerr << "cur_nodes=" << _nodes.size() << endl;
 
         // (1) Generate an input signal epsilon according to P(epsilon).
 
@@ -73,7 +99,7 @@ public:
                 s2 = s;
             }
         }
-        cerr << "d1=" << d1 << " d2=" << d2 << endl;
+//        cerr << "d1=" << d1 << " d2=" << d2 << endl;
 
         // (3) Increment the age of all the edges emanating from s1
         for( GNGEdge<ScalarType>* e : _edges )
