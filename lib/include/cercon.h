@@ -31,11 +31,17 @@ public:
             for( int k = 0; k < 100; ++k )
                 _gng->in( in );
         }
-        GNGNode<double>* ret_gng;
-        double error = _gng->find( in, ret_gng );
-        cerr << "NEIGH: " << ret_gng->neighbors().size() << endl;
-        _ofs << _seenSamples++ << "," << error << endl;
-        return error;
+//        GNGNode<double>* ret_gng;
+        std::vector< GNGNode<double>* > nearestNodes = _gng->findNearest( in, 10 );
+        for( int k = 0; k < nearestNodes.size(); ++k )
+        {
+            cerr << vector_distance( in, nearestNodes[k]->position() ) << endl;
+        }
+//        cerr << "NEIGH: " << ret_gng->neighbors().size() << endl;
+//        _ofs << _seenSamples++ << "," << error << endl;
+        cerr << "nodes=" << _gng->nodes().size() << endl;
+        cerr << "edges=" << _gng->edges().size() << endl;
+        return 0.0;
     }
 
 private:

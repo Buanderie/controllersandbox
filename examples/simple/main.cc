@@ -6,6 +6,7 @@ using namespace std;
 #include <gngnode.h>
 #include <gng.h>
 #include <utils.h>
+#include <cercon.h>
 
 #include <opencv2/opencv.hpp>
 using namespace cv;
@@ -35,11 +36,11 @@ int main( int argc, char** argv )
 {
     srand(time(NULL));
 
-    GNG<double> gng;
-
     ofstream ofs( "error.csv" );
     ofs << "t,error" << endl;
 
+#ifdef GRAPH
+    GNG<double> gng;
     int t = 0;
     while(true)
     {
@@ -74,5 +75,16 @@ int main( int argc, char** argv )
 //        waitKey(5);
         t++;
     }
+#else
+    CerCon cc(1);
+    while(true)
+    {
+        double r = gngrand<double>(-1.0, 1.0);
+        std::vector<double> in = { r };
+        double rr = cc.predict(in);
+        cerr << "error=" << rr << endl;
+    }
+#endif
+
     return 0;
 }

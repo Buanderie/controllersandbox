@@ -2,6 +2,8 @@
 
 #include <limits>
 #include <iostream>
+#include <algorithm>
+
 using namespace std;
 
 #include "gngnode.h"
@@ -31,6 +33,28 @@ public:
     virtual ~GNG()
     {
 
+    }
+
+    std::vector< GNGNode<ScalarType>* > findNearest( vector<ScalarType> in, size_t n_min )
+    {
+        // Copy from set
+        std::vector< GNGNode<ScalarType>* > v;
+        for( GNGNode<ScalarType>* n : _nodes )
+            v.push_back( n );
+
+        std::sort(begin(v),
+                  end(v),
+                  [in]( GNGNode<ScalarType>*& lhs,  GNGNode<ScalarType>*& rhs)
+        {
+            return vector_distance(in, lhs->position()) < vector_distance(in, rhs->position());
+        });
+
+        std::vector< GNGNode<ScalarType>* > ret;
+        for( size_t i = 0; i < min( v.size(), n_min ); ++i )
+        {
+            ret.push_back( v[i] );
+        }
+        return ret;
     }
 
     ScalarType find( std::vector<ScalarType> input, GNGNode<ScalarType>*& ret )
@@ -72,7 +96,7 @@ public:
 
     void in( const std::vector<ScalarType> epsilon )
     {
-//        cerr << "cur_nodes=" << _nodes.size() << endl;
+        //        cerr << "cur_nodes=" << _nodes.size() << endl;
 
         // (1) Generate an input signal epsilon according to P(epsilon).
 
@@ -99,7 +123,7 @@ public:
                 s2 = s;
             }
         }
-//        cerr << "d1=" << d1 << " d2=" << d2 << endl;
+        //        cerr << "d1=" << d1 << " d2=" << d2 << endl;
 
         // (3) Increment the age of all the edges emanating from s1
         for( GNGEdge<ScalarType>* e : _edges )
@@ -247,7 +271,7 @@ private:
         //        cerr << "maxErrorNode=" << maxErrorNode << endl;
 
         //
-        if( maxErrorNode->neighbors().size() > 0 )
+        if( maxErrorNode && maxErrorNode->neighbors().size() > 0 )
         {
             ScalarType maxNeihborError = std::numeric_limits<ScalarType>::min();
             GNGNode<ScalarType>* maxNeighborErrorNode = nullptr;
@@ -262,18 +286,21 @@ private:
                 }
             }
 
-            // Insert halfway
-            std::vector<ScalarType> w_q = maxErrorNode->position();
-            std::vector<ScalarType> w_f = maxNeighborErrorNode->position();
-            std::vector<ScalarType> w_r = vector_scale( vector_add( w_q, w_f ), (ScalarType)1 / (ScalarType)2 );
-            GNGNode<ScalarType> * f = new GNGNode<ScalarType>( w_r.size(), w_r );
-            maxErrorNode->error() *= _alpha;
-            maxNeighborErrorNode->error() *= _alpha;
-            f->error() = maxErrorNode->error();
-            _nodes.insert( f );
-            removeEdge( maxErrorNode, maxNeighborErrorNode );
-            addEdge( maxErrorNode, f );
-            addEdge( f, maxNeighborErrorNode );
+            if( maxNeighborErrorNode )
+            {
+                // Insert halfway
+                std::vector<ScalarType> w_q = maxErrorNode->position();
+                std::vector<ScalarType> w_f = maxNeighborErrorNode->position();
+                std::vector<ScalarType> w_r = vector_scale( vector_add( w_q, w_f ), (ScalarType)1 / (ScalarType)2 );
+                GNGNode<ScalarType> * f = new GNGNode<ScalarType>( w_r.size(), w_r );
+                maxErrorNode->error() *= _alpha;
+                maxNeighborErrorNode->error() *= _alpha;
+                f->error() = maxErrorNode->error();
+                _nodes.insert( f );
+                removeEdge( maxErrorNode, maxNeighborErrorNode );
+                addEdge( maxErrorNode, f );
+                addEdge( f, maxNeighborErrorNode );
+            }
         }
     }
 
