@@ -20,8 +20,8 @@ public:
         _ofs.open( "error.csv" );
         _ofs << "t,error" << endl;
         _seenSamples = 0;
-        _learningRate = 0.0225;
-        _radius = 50;
+        _learningRate = 0.2;
+        _radius = 80;
 #ifdef DYN_VQ
         _needVq = false;
 #else
@@ -108,12 +108,22 @@ public:
         */
 
         double increment = (error / (double)(_gng->nodes().size())) * _learningRate;
+        double totalAssignment = 0.0;
         for( auto& kv : weights )
         {
+            totalAssignment += 1.0 / (kv.first->learnedTimes() + 1.0);
+        }
+
+        for( auto& kv : weights )
+        {
+            double assignment = 1.0 / (kv.first->learnedTimes() + 1.0);
+            // cerr << "asignment=" << assignment << " totalAssignment=" << totalAssignment << endl;
+            // assignment = 1.0;
             double wi = kv.first->weight();
-            double wipp = wi + increment;
+            double wipp = wi + (increment * (assignment / totalAssignment) );
             // _weights.insert_or_assign( kv.first, wipp );
             kv.first->weight() = wipp;
+            kv.first->learnedTimes() += 1.0;
         }
 
         _numIter++;

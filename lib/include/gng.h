@@ -335,6 +335,7 @@ private:
                 std::vector<ScalarType> w_r = vector_scale( vector_add( w_q, w_f ), (ScalarType)1 / (ScalarType)2 );
                 GNGNode<ScalarType> * f = new GNGNode<ScalarType>( w_r.size(), w_r );
                 f->weight() = (maxErrorNode->weight() + maxNeighborErrorNode->weight()) / (ScalarType)2;
+                // f->learnedTimes() = (maxErrorNode->learnedTimes() + maxNeighborErrorNode->learnedTimes()) / (ScalarType)2;
                 maxErrorNode->error() *= _alpha;
                 maxNeighborErrorNode->error() *= _alpha;
                 f->error() = maxErrorNode->error();

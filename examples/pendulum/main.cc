@@ -78,11 +78,11 @@ void physicsPeriodic(InvPendulumEngine* eng)
     }
 }
 
-double controllerFunc(double cart_pos, double pen_angle, double cart_speed, double pen_speed, double pen_len )
+double controllerFunc(double cart_pos, double pen_angle, double cart_speed, double pen_speed, double pen_len, double pen_mass )
 {
     //Their controller code goes here
     //Returns a force on the cart
-    double kp = 15;
+    double kp = 25;
     double error_deg;
     double error_speed = pen_speed;
     double cart_error = fabs(cart_pos);
@@ -92,7 +92,7 @@ double controllerFunc(double cart_pos, double pen_angle, double cart_speed, doub
         error_deg = pen_angle - 360;
     double pkp = kp * error_deg;
 
-        pkp = 0;
+    pkp = 0;
 
     std::vector< double > curState = { pen_angle, cart_speed, pen_speed };
     cerr << "Pendulum Error=" << error_deg << endl;
@@ -121,9 +121,10 @@ void controllerPeriodic(InvPendulumEngine* eng)
         double cart_speed_local = eng->Get_cart_vel();
         double pen_speed_local = eng->Get_pen_angular_vel();
         double pen_len = eng->Get_pen_len();
+        double pen_mass = eng->Get_pen_mass();
         m.unlock();
 
-        double returnedForce = controllerFunc(cart_pos_local, pen_angle_local, cart_speed_local, pen_speed_local, pen_len );
+        double returnedForce = controllerFunc(cart_pos_local, pen_angle_local, cart_speed_local, pen_speed_local, pen_len, pen_mass );
 
         m.lock();
         eng->nextForce = returnedForce;
@@ -178,10 +179,11 @@ int main()
             engine.Set_cart_pos(0);
             engine.Set_pen_angular_vel(0);
             engine.Set_pen_angle( -15.0 + ((double)rand() / (double)RAND_MAX) * 30.0 );
-//                        engine.Set_pen_angle(180);
+//                        engine.Set_pen_angle(15);
 //            double rndLen = ((double)rand() / (double)RAND_MAX) * 2.5;
 //            curRodLen = 0.2 + rndLen;
 //            engine.Set_pen_len( curRodLen );
+//            engine.Set_pen_mass( gngrand<double>(0.2, 100.0) );
         }
 
         sf::sleep(sf::seconds(GRAPHICS_ENGINE_FREQUENCY_SEC));

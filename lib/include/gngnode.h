@@ -12,6 +12,7 @@ public:
     GNGNode( size_t inputSize, const std::vector< ScalarType >& position )
         :_position(position), _error(1.0)
     {
+        _learnedTimes = 0.0;
         _weight = gngrand<ScalarType>(-1.0, 1.0);
     }
 
@@ -54,6 +55,11 @@ public:
         return _weight;
     }
 
+    ScalarType& learnedTimes()
+    {
+        return _learnedTimes;
+    }
+
 private:
 
 protected:
@@ -61,5 +67,6 @@ protected:
     std::set< GNGNode< ScalarType >* > _neighbors;
     ScalarType _error;
     ScalarType _weight;
+    ScalarType _learnedTimes;
 
 };
