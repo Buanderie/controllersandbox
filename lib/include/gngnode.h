@@ -3,6 +3,8 @@
 #include <vector>
 #include <set>
 
+#include "utils.h"
+
 template< typename ScalarType >
 class GNGNode
 {
@@ -10,7 +12,7 @@ public:
     GNGNode( size_t inputSize, const std::vector< ScalarType >& position )
         :_position(position), _error(1.0)
     {
-
+        _weight = gngrand<ScalarType>(-1.0, 1.0);
     }
 
     virtual ~GNGNode()
@@ -47,11 +49,17 @@ public:
         return _error;
     }
 
+    ScalarType& weight()
+    {
+        return _weight;
+    }
+
 private:
 
 protected:
     std::vector< ScalarType > _position;
     std::set< GNGNode< ScalarType >* > _neighbors;
     ScalarType _error;
+    ScalarType _weight;
 
 };

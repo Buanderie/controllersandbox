@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 project( Test )
 
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fpermissive -pthread " )
+SET( CMAKE_EXE_LINKER_FLAGS "-pthread" )
+
 #
 #
 ## CHECK FOR COMPILER CAPABILITIES

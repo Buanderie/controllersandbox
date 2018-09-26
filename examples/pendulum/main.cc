@@ -26,10 +26,12 @@ const double GRAPHICS_ENGINE_FREQUENCY_SEC = 1.0 / 60; //~30 fps
 bool physicsRunning = true;
 bool controllerRunning = true;
 
+double curRodLen = 1.0;
+
 std::mutex m;
 
-CerCon cont(5);
-std::vector<double> lastState(5);
+CerCon cont(3);
+std::vector<double> lastState(3);
 
 void drawCartAndRod(int x, float rodAngle, sf::RenderWindow& app) {
     sf::RectangleShape cart(sf::Vector2f(CART_W, CART_H));
@@ -37,8 +39,8 @@ void drawCartAndRod(int x, float rodAngle, sf::RenderWindow& app) {
     cart.setPosition(x, RAIL_Y);
     app.draw(cart);
 
-    sf::RectangleShape rod(sf::Vector2f(ROD_THICKNESS, ROD_LEN));
-    rod.setOrigin(ROD_THICKNESS/2, ROD_LEN);
+    sf::RectangleShape rod(sf::Vector2f(ROD_THICKNESS, ROD_LEN * curRodLen));
+    rod.setOrigin(ROD_THICKNESS/2, ROD_LEN * curRodLen);
     rod.setPosition(x, RAIL_Y);
     rod.rotate(rodAngle);
     rod.setFillColor(sf::Color(100, 220, 50));
@@ -82,25 +84,30 @@ double controllerFunc(double cart_pos, double pen_angle, double cart_speed, doub
     //Returns a force on the cart
     double kp = 15;
     double error_deg;
+    double error_speed = pen_speed;
+    double cart_error = fabs(cart_pos);
     if (pen_angle < 180)
         error_deg = pen_angle;
     else
         error_deg = pen_angle - 360;
     double pkp = kp * error_deg;
 
+        pkp = 0;
+
+    std::vector< double > curState = { pen_angle, cart_speed, pen_speed };
     cerr << "Pendulum Error=" << error_deg << endl;
     double error = error_deg;
     cont.train( lastState, error );
 
-    std::vector< double > curState = { cart_pos, pen_angle, cart_speed, pen_speed, pen_len };
     double ret = cont.predict( curState );
     cerr << "CerCon returned: " << ret << endl;
 
     // return 10.0 * ( (double)rand() / (double)RAND_MAX );
 
     lastState = curState;
-    return ret + pkp;
+    double cret = ret + pkp;
 
+    return cret;
 }
 
 void controllerPeriodic(InvPendulumEngine* eng)
@@ -132,7 +139,7 @@ int main()
     srand(time(NULL));
 
     // Create the main window
-    sf::RenderWindow app(sf::VideoMode(640, 480), "SFML window");
+    sf::RenderWindow app(sf::VideoMode(1280, 720), "SFML window");
 
     InvPendulumEngine engine(&m);
     engine.Set_pen_angle(1);
@@ -164,15 +171,17 @@ int main()
 
         cerr << "****** CART_POS = " << engine.Get_cart_pos() << " PEN_LEN=" << engine.Get_pen_len() << endl;
 
-        if( fabs(engine.Get_cart_pos()) > 2.0 )
+        if( fabs(engine.Get_cart_pos()) > 6.0 )
         {
             engine.Set_pen_angle(1);
             engine.Set_cart_vel(0);
             engine.Set_cart_pos(0);
             engine.Set_pen_angular_vel(0);
-            engine.Set_pen_angle( -15.0 + ((double)rand() / (double)RAND_MAX) * 80.0 );
-//            double rndLen = ((double)rand() / (double)RAND_MAX) * 0.5;
-//            engine.Set_pen_len( 0.6 + rndLen );
+            engine.Set_pen_angle( -15.0 + ((double)rand() / (double)RAND_MAX) * 30.0 );
+//                        engine.Set_pen_angle(180);
+//            double rndLen = ((double)rand() / (double)RAND_MAX) * 2.5;
+//            curRodLen = 0.2 + rndLen;
+//            engine.Set_pen_len( curRodLen );
         }
 
         sf::sleep(sf::seconds(GRAPHICS_ENGINE_FREQUENCY_SEC));

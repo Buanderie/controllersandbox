@@ -34,7 +34,7 @@ std::vector<double> randSin()
 
 double func( double input )
 {
-    return sin( input );
+    return sin( input ) * 100.0;
 }
 
 int main( int argc, char** argv )
@@ -95,7 +95,7 @@ int main( int argc, char** argv )
         std::vector<double> in = { cur_y };
 
         double pred_y = cc.predict(in);
-        double next_y = func( cur_x + 0.5 );
+        double next_y = func( cur_x + 0.6 );
 
         double error = (next_y - pred_y);
         cerr << "actual=" << next_y << " pred=" << pred_y << " error=" << error << endl;

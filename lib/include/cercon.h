@@ -6,7 +6,7 @@
 #include <fstream>
 #include <iostream>
 
-// #define DYN_VQ
+#define DYN_VQ
 
 using namespace std;
 
@@ -20,14 +20,15 @@ public:
         _ofs.open( "error.csv" );
         _ofs << "t,error" << endl;
         _seenSamples = 0;
-        _learningRate = 0.1;
-        _radius = 15;
+        _learningRate = 0.0225;
+        _radius = 50;
 #ifdef DYN_VQ
         _needVq = false;
 #else
         _needVq = true;
 #endif
         _numIter = 0;
+        _vqEpisodes = 0;
     }
 
     virtual ~CerCon()
@@ -44,12 +45,19 @@ public:
         GNGNode<double>* ret_node;
         double vqError = _gng->find( in, ret_node );
 #ifdef DYN_VQ
-        if( vqError >= 0.5 || _numIter <= 2000 )
+        if( _numIter <= 500 || _numIter % 1000 == 0 )
         {
             _needVq = true;
+            _vqEpisodes = 0;
         }
         else
         {
+            _needVq = false;
+        }
+
+        if( _vqEpisodes >= 300 )
+        {
+            _vqEpisodes = 0;
             _needVq = false;
         }
 #endif
@@ -76,6 +84,7 @@ public:
                 _needVq = false;
             }
 #endif
+            _vqEpisodes++;
         }
 
         // Perform a least-square iteration...
@@ -88,7 +97,6 @@ public:
             weights.insert( make_pair(n, getWeight(n)) );
         }
 
-
         /*
         // Debug print
         cerr << "hashmap.size()=" << _weights.size() << endl;
@@ -99,12 +107,13 @@ public:
         }
         */
 
-        double increment = (error / (double)(_weights.size())) * _learningRate;
+        double increment = (error / (double)(_gng->nodes().size())) * _learningRate;
         for( auto& kv : weights )
         {
-            double wi = _weights.find( kv.first );
+            double wi = kv.first->weight();
             double wipp = wi + increment;
-            _weights.insert_or_assign( kv.first, wipp );
+            // _weights.insert_or_assign( kv.first, wipp );
+            kv.first->weight() = wipp;
         }
 
         _numIter++;
@@ -131,7 +140,8 @@ private:
 
     double getWeight( GNGNode<double>* n )
     {
-        double ret;
+        double ret = n->weight();
+        /*
         if( _weights.find( n, ret ) )
         {
 
@@ -142,6 +152,7 @@ private:
             ret = gngrand<double>(-1.0, 1.0);
             _weights.insert( n, ret );
         }
+        */
         return ret;
     }
 
@@ -158,5 +169,5 @@ private:
 
 protected:
     int _numIter;
-
+    int _vqEpisodes;
 };
