@@ -3,6 +3,7 @@
 #include <limits>
 #include <iostream>
 #include <algorithm>
+#include <map>
 
 using namespace std;
 
@@ -11,9 +12,26 @@ using namespace std;
 
 #include "utils.h"
 
+//template< typename ScalarType >
+//struct NodeComparator_
+//{
+//    NodeComparator_( std::vector<ScalarType> in )
+//        :_input(in)
+//    {
+
+//    }
+//    inline bool operator() (const GNGNode<ScalarType>*& lhs, const GNGNode<ScalarType>*& rhs)
+//    {
+//        // return (struct1.key < struct2.key);
+//        return vector_distance(_input, lhs->position()) < vector_distance(_input, rhs->position());
+//    }
+//    std::vector<ScalarType> _input;
+//};
+
 template< typename ScalarType >
 class GNG
 {
+
 public:
     GNG( size_t inputSize = 2 )
         :_inputSize(inputSize)
@@ -23,7 +41,7 @@ public:
         _En = 0.06;
 
         _A = 300;
-        _ageMax = 200;
+        _ageMax = 100;
         _alpha = 0.5;
         _beta = 0.995;
 
@@ -38,22 +56,43 @@ public:
     std::vector< GNGNode<ScalarType>* > findNearest( vector<ScalarType> in, size_t n_min )
     {
         // Copy from set
+        std::map< ScalarType, GNGNode<ScalarType>* > _distances;
         std::vector< GNGNode<ScalarType>* > v;
-        for( GNGNode<ScalarType>* n : _nodes )
-            v.push_back( n );
 
+        for( GNGNode<ScalarType>* n : _nodes )
+        {
+            // v.push_back( n );
+            _distances.insert( std::make_pair(vector_distance(in, n->position()), n ) );
+        }
+
+        /*
         std::sort(begin(v),
                   end(v),
                   [in]( GNGNode<ScalarType>*& lhs,  GNGNode<ScalarType>*& rhs)
         {
             return vector_distance(in, lhs->position()) < vector_distance(in, rhs->position());
         });
+        */
+        // std::sort(v.begin(), v.end(), NodeComparator_<ScalarType>(in) );
 
         std::vector< GNGNode<ScalarType>* > ret;
+
+        /*
         for( size_t i = 0; i < min( v.size(), n_min ); ++i )
         {
             ret.push_back( v[i] );
         }
+        */
+
+        int k = 0;
+        for( auto& kv : _distances )
+        {
+            if( k >= n_min )
+                break;
+            ret.push_back( kv.second );
+            k++;
+        }
+
         return ret;
     }
 
@@ -94,7 +133,7 @@ public:
         // addEdge( a, b );
     }
 
-    void in( const std::vector<ScalarType> epsilon )
+    double in( const std::vector<ScalarType> epsilon )
     {
         //        cerr << "cur_nodes=" << _nodes.size() << endl;
 
@@ -211,6 +250,8 @@ public:
         // yet fulfilled go to step 1.
 
         _inCount++;
+
+        return d1;
 
     }
 

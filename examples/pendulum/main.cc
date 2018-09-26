@@ -19,7 +19,7 @@ const int PIVOT_RADIAS = 10;
 const int CART_W = 60;
 const int CART_H = 40;
 
-const double CONTROLLER_FREQUENCY_SEC = 0.020;
+const double CONTROLLER_FREQUENCY_SEC = 0.001;
 const double PHYSICS_ENGINE_FREQUENCY_SEC = 0.001;
 const double GRAPHICS_ENGINE_FREQUENCY_SEC = 1.0 / 60; //~30 fps
 
@@ -28,7 +28,8 @@ bool controllerRunning = true;
 
 std::mutex m;
 
-CerCon cont(3);
+CerCon cont(5);
+std::vector<double> lastState(5);
 
 void drawCartAndRod(int x, float rodAngle, sf::RenderWindow& app) {
     sf::RectangleShape cart(sf::Vector2f(CART_W, CART_H));
@@ -75,21 +76,31 @@ void physicsPeriodic(InvPendulumEngine* eng)
     }
 }
 
-double controllerFunc(double cart_pos, double pen_angle)
+double controllerFunc(double cart_pos, double pen_angle, double cart_speed, double pen_speed, double pen_len )
 {
-    /*
     //Their controller code goes here
     //Returns a force on the cart
-    double kp = 400;
+    double kp = 15;
     double error_deg;
     if (pen_angle < 180)
         error_deg = pen_angle;
     else
         error_deg = pen_angle - 360;
+    double pkp = kp * error_deg;
 
-    return kp * error_deg;
-    */
-    return 10.0 * ( (double)rand() / (double)RAND_MAX );
+    cerr << "Pendulum Error=" << error_deg << endl;
+    double error = error_deg;
+    cont.train( lastState, error );
+
+    std::vector< double > curState = { cart_pos, pen_angle, cart_speed, pen_speed, pen_len };
+    double ret = cont.predict( curState );
+    cerr << "CerCon returned: " << ret << endl;
+
+    // return 10.0 * ( (double)rand() / (double)RAND_MAX );
+
+    lastState = curState;
+    return ret + pkp;
+
 }
 
 void controllerPeriodic(InvPendulumEngine* eng)
@@ -100,11 +111,13 @@ void controllerPeriodic(InvPendulumEngine* eng)
         m.lock();
         double cart_pos_local = eng->Get_cart_pos();
         double pen_angle_local = eng->Get_pen_angle();
+        double cart_speed_local = eng->Get_cart_vel();
+        double pen_speed_local = eng->Get_pen_angular_vel();
+        double pen_len = eng->Get_pen_len();
         m.unlock();
-        double returnedForce = controllerFunc(cart_pos_local, pen_angle_local);
-        std::vector<double> inputCerCont { cart_pos_local, pen_angle_local, returnedForce };
-        double ret = cont.predict( inputCerCont );
-        cerr << "CerCon returned: " << ret << endl;
+
+        double returnedForce = controllerFunc(cart_pos_local, pen_angle_local, cart_speed_local, pen_speed_local, pen_len );
+
         m.lock();
         eng->nextForce = returnedForce;
         m.unlock();
@@ -119,7 +132,7 @@ int main()
     srand(time(NULL));
 
     // Create the main window
-    sf::RenderWindow app(sf::VideoMode(1280, 760), "SFML window");
+    sf::RenderWindow app(sf::VideoMode(640, 480), "SFML window");
 
     InvPendulumEngine engine(&m);
     engine.Set_pen_angle(1);
@@ -128,7 +141,7 @@ int main()
     std::thread physicsThread(physicsPeriodic, &engine);
     std::thread controllerThread(controllerPeriodic, &engine);
 
-	// Start the game loop
+    // Start the game loop
     while (app.isOpen())
     {
         // Process events
@@ -148,6 +161,19 @@ int main()
         app.clear();
         drawCartAndRod(cart_pos + 500, pen_angle, app);
         app.display();
+
+        cerr << "****** CART_POS = " << engine.Get_cart_pos() << " PEN_LEN=" << engine.Get_pen_len() << endl;
+
+        if( fabs(engine.Get_cart_pos()) > 2.0 )
+        {
+            engine.Set_pen_angle(1);
+            engine.Set_cart_vel(0);
+            engine.Set_cart_pos(0);
+            engine.Set_pen_angular_vel(0);
+            engine.Set_pen_angle( -15.0 + ((double)rand() / (double)RAND_MAX) * 80.0 );
+//            double rndLen = ((double)rand() / (double)RAND_MAX) * 0.5;
+//            engine.Set_pen_len( 0.6 + rndLen );
+        }
 
         sf::sleep(sf::seconds(GRAPHICS_ENGINE_FREQUENCY_SEC));
     }

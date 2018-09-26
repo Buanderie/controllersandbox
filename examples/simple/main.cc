@@ -32,12 +32,17 @@ std::vector<double> randSin()
     return ret;
 }
 
+double func( double input )
+{
+    return sin( input );
+}
+
 int main( int argc, char** argv )
 {
     srand(time(NULL));
 
-    ofstream ofs( "error.csv" );
-    ofs << "t,error" << endl;
+//    ofstream ofs( "error.csv" );
+//    ofs << "t,error" << endl;
 
 #ifdef GRAPH
     GNG<double> gng;
@@ -46,10 +51,10 @@ int main( int argc, char** argv )
     {
         std::vector<double> vi = randBox(0, 320, 0, 240 );
         std::vector<double> vi2 = randBox(320, 640, 240, 480);
-//        std::vector<double> vi2 = gngrand_position<double>(2, 2, 3);
+        //        std::vector<double> vi2 = gngrand_position<double>(2, 2, 3);
         for( int k = 0; k < 100; ++k )
         { gng.in( vi );
-//        gng.in( vi2 );
+            //        gng.in( vi2 );
         }
         cv::Mat popo = cv::Mat::zeros( cv::Size(640, 480), CV_8UC3 );
         for( auto n : gng.nodes() )
@@ -71,18 +76,36 @@ int main( int argc, char** argv )
         ret = n->position();
         ofs << t << "," << error << endl;
 
-//        imshow("popo", popo);
-//        waitKey(5);
+        //        imshow("popo", popo);
+        //        waitKey(5);
         t++;
     }
 #else
+
+    std::ofstream ofs("/tmp/test.csv");
+    ofs << "x,y,gt_y,pred_y,error" << endl;
+
     CerCon cc(1);
+    double dt = 0.01;
+    double cur_x = 0.0;
+
     while(true)
     {
-        double r = gngrand<double>(-1.0, 1.0);
-        std::vector<double> in = { r };
-        double rr = cc.predict(in);
-        cerr << "error=" << rr << endl;
+        double cur_y = func( cur_x );
+        std::vector<double> in = { cur_y };
+
+        double pred_y = cc.predict(in);
+        double next_y = func( cur_x + 0.5 );
+
+        double error = (next_y - pred_y);
+        cerr << "actual=" << next_y << " pred=" << pred_y << " error=" << error << endl;
+        ofs << cur_x << "," << cur_y << "," << next_y << "," << pred_y << "," << error << endl;
+
+        cc.train( in, error );
+
+        // iterate
+        cur_x += dt;
+
     }
 #endif
 
