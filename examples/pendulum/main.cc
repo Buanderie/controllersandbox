@@ -82,7 +82,7 @@ double controllerFunc(double cart_pos, double pen_angle, double cart_speed, doub
 {
     //Their controller code goes here
     //Returns a force on the cart
-    double kp = 25;
+    double kp = 15;
     double error_deg;
     double error_speed = pen_speed;
     double cart_error = fabs(cart_pos);
@@ -92,7 +92,7 @@ double controllerFunc(double cart_pos, double pen_angle, double cart_speed, doub
         error_deg = pen_angle - 360;
     double pkp = kp * error_deg;
 
-    pkp = 0;
+//    pkp = 0;
 
     std::vector< double > curState = { pen_angle, cart_speed, pen_speed };
     cerr << "Pendulum Error=" << error_deg << endl;
@@ -159,6 +159,9 @@ int main()
             // Close window : exit
             if (event.type == sf::Event::Closed)
                 app.close();
+
+            if (event.type == sf::Event::KeyPressed)
+                engine.nextForce = 30000;
         }
 
         m.lock();
@@ -179,7 +182,7 @@ int main()
             engine.Set_cart_pos(0);
             engine.Set_pen_angular_vel(0);
             engine.Set_pen_angle( -15.0 + ((double)rand() / (double)RAND_MAX) * 30.0 );
-//                        engine.Set_pen_angle(15);
+                        engine.Set_pen_angle(180);
 //            double rndLen = ((double)rand() / (double)RAND_MAX) * 2.5;
 //            curRodLen = 0.2 + rndLen;
 //            engine.Set_pen_len( curRodLen );

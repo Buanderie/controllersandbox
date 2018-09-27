@@ -20,8 +20,8 @@ public:
         _ofs.open( "error.csv" );
         _ofs << "t,error" << endl;
         _seenSamples = 0;
-        _learningRate = 0.2;
-        _radius = 80;
+        _learningRate = .75;
+        _radius = 15;
 #ifdef DYN_VQ
         _needVq = false;
 #else
